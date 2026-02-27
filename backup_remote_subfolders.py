@@ -1,9 +1,10 @@
 import getpass
+from modules.ssh_tools import is_directory, create_remote_zip
 import os
 import paramiko
 import sys
-import stat
-from scp import SCPClient  # optional, but we'll use SFTP directly
+# import stat
+# from scp import SCPClient  # optional, but we'll use SFTP directly
 
 # ----------------------------------------------------------------------
 # Configuration
@@ -12,54 +13,6 @@ from scp import SCPClient  # optional, but we'll use SFTP directly
 LOCAL_DIR = "backups"  # Local folder to store downloaded zips
 # KEY_DIR = os.path.expanduser("~/.ssh/keys")  # Directory containing SSH keys
 DEFAULT_PORT = 22
-
-# ----------------------------------------------------------------------
-# Helper functions
-# ----------------------------------------------------------------------
-
-# def find_private_key(key_dir):
-#    """
-#    Find a private key file in the given directory.
-#    Returns the full path to the first file that does not end with '.pub'.
-#    If none found, returns None.
-#    """
-#    if not os.path.isdir(key_dir):
-#        return None
-#    for fname in os.listdir(key_dir):
-#        full_path = os.path.join(key_dir, fname)
-#        if os.path.isfile(full_path) and not fname.endswith('.pub'):
-#            return full_path
-#    return None
-
-
-def is_directory(sftp, path):
-    """
-    Check if the given path on the remote server is a directory.
-    """
-    try:
-        attrs = sftp.stat(path)
-        return stat.S_ISDIR(attrs.st_mode)
-    except IOError:
-        return False
-
-
-def create_remote_zip(ssh_client, remote_dir, subfolder):
-    """
-    Create a zip archive of a subfolder inside remote_dir.
-    The archive is created inside remote_dir with name subfolder.zip.
-    Returns True if successful, False otherwise.
-    """
-
-    # Command: change to remote_dir and zip the subfolder quietly, recursively
-    command = f"cd {remote_dir} && zip -rq {subfolder}.zip {subfolder}"
-    stdin, stdout, stderr = ssh_client.exec_command(command)
-    exit_status = stdout.channel.recv_exit_status()
-    if exit_status != 0:
-        error = stderr.read().decode().strip()
-        print(f"Error creating zip folder for {subfolder}: {error}")
-        return False
-
-    return True
 
 
 # ----------------------------------------------------------------------
@@ -96,7 +49,20 @@ def main():
     if use_password in ["y", "yes"]:
         passwd = getpass.getpass("Enter ssh password: ")
     else:
-        pass  # print reminder to prepare ssh key with remote server first
+        print("*" * 60)
+        print("To work without password:")
+        print("- Remember to create ssh key with 'ssh-keygen' command.")
+        print("- Copy ssh key to remote server with 'ssh-copy-id' command.")
+        print("*" * 60)
+        nopass_answer = input("\nReady to continue without password? (y/n): ").strip()
+
+        if nopass_answer in ["no", "n"]:
+            print("\nExiting!")
+            sys.exit(0)
+
+        if nopass_answer not in ["y", "yes"]:
+            print("\nBad answer. Exiting...")
+            sys.exit(1)
 
     # Find SSH private key
     # key_path = find_private_key(KEY_DIR)
