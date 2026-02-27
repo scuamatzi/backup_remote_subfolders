@@ -9,7 +9,7 @@ from scp import SCPClient  # optional, but we'll use SFTP directly
 # Configuration
 # ----------------------------------------------------------------------
 
-LOCAL_DIR = "emails"  # Local folder to store downloaded zips
+LOCAL_DIR = "backups"  # Local folder to store downloaded zips
 # KEY_DIR = os.path.expanduser("~/.ssh/keys")  # Directory containing SSH keys
 DEFAULT_PORT = 22
 
@@ -91,6 +91,13 @@ def main():
         print("Remote directory is required.")
         sys.exit(1)
 
+    use_password = input("Need password for ssh connection? (y/n) :  ").strip()
+
+    if use_password in ["y", "yes"]:
+        passwd = getpass.getpass("Enter ssh password: ")
+    else:
+        pass  # print reminder to prepare ssh key with remote server first
+
     # Find SSH private key
     # key_path = find_private_key(KEY_DIR)
     # if not key_path:
@@ -109,7 +116,10 @@ def main():
 
     try:
         print(f"Connecting to {host}:{port} as {username}...")
-        ssh.connect(hostname=host, port=port, username=username)
+        if use_password in ["y", "yes"]:
+            ssh.connect(hostname=host, port=port, username=username, password=passwd)
+        else:
+            ssh.connect(hostname=host, port=port, username=username)
         print("Connected!")
     except Exception as e:
         print(f"Connection failed: {e}")
