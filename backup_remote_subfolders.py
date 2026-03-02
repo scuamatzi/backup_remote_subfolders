@@ -111,11 +111,12 @@ def main():
             print("No subfolders found. Exiting.")
             sys.exit(1)
 
-        print(f"Found {len(subfolders)} subfolder(s): {', '.join(subfolders)}")
+        total_subfolders = len(subfolders)
+        print(f"Found {total_subfolders} subfolder(s): {', '.join(subfolders)}")
 
         # Process each subfolder
-        for sub in subfolders:
-            print(f"\nProcessing '{sub}' ...")
+        for idx, sub in enumerate(subfolders, 1):
+            print(f"\nProcessing '{sub}' ({idx}/{total_subfolders}) ...")
 
             # Create zip on remote server
             if not create_remote_zip(ssh, remote_dir, sub):
