@@ -49,6 +49,7 @@ def main():
     if use_password in ["y", "yes"]:
         passwd = getpass.getpass("Enter ssh password: ")
     else:
+        print("\n")
         print("*" * 60)
         print("To work without password:")
         print("- Remember to create ssh key with 'ssh-keygen' command.")
@@ -96,7 +97,7 @@ def main():
 
     try:
         #  List items in remote directory
-        print(f"Listing contents of {remote_dir}...")
+        print(f"\nListing contents of {remote_dir}...")
         items = sftp.listdir(remote_dir)
         subfolders = []
 
@@ -118,6 +119,13 @@ def main():
         for idx, sub in enumerate(subfolders, 1):
             print(f"\nProcessing '{sub}' ({idx}/{total_subfolders}) ...")
 
+            local_zip_path = os.path.join(local_dir_full, f"{sub}.zip")
+
+            # Check if zip file exists, then skip
+            if os.path.exists(local_zip_path):
+                print(f"\nFile '{sub}.zip' already downloaded. Skipping")
+                continue
+
             # Create zip on remote server
             if not create_remote_zip(ssh, remote_dir, sub):
                 print(f"Skipping download for '{sub}' due to zip error.")
@@ -126,8 +134,6 @@ def main():
             remote_zip_path = os.path.join(remote_dir, f"{sub}.zip").replace(
                 "\\", "/   "
             )  # ensure posix path
-
-            local_zip_path = os.path.join(local_dir_full, f"{sub}.zip")
 
             # Download the zip file
             try:
