@@ -29,6 +29,21 @@ def is_directory(sftp, path):
         return False
 
 
+def remote_zip_file_exist(sftp, remote_full_path):
+    """
+    Check if remote path exist using stat()
+    Returns True if exist, False otherwise
+    """
+    try:
+        sftp.stat(remote_full_path)
+        return True
+    except FileNotFoundError:
+        return False
+    except Exception as e:
+        print(f"Error checking if remote path exist:: {e}")
+        return False
+
+
 def create_remote_zip(ssh_client, remote_dir, subfolder):
     """
     Create a zip archive of a subfolder inside remote_dir.

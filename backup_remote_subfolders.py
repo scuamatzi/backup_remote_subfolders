@@ -1,5 +1,5 @@
 import getpass
-from modules.ssh_tools import is_directory, create_remote_zip
+from modules.ssh_tools import is_directory, create_remote_zip, remote_zip_file_exist
 import os
 import paramiko
 import sys
@@ -121,19 +121,21 @@ def main():
 
             local_zip_path = os.path.join(local_dir_full, f"{sub}.zip")
 
+            remote_zip_path = os.path.join(remote_dir, f"{sub}.zip").replace(
+                "\\", "/   "
+            )  # ensure posix path
+
             # Check if zip file exists, then skip
             if os.path.exists(local_zip_path):
                 print(f"\nFile '{sub}.zip' already downloaded. Skipping")
                 continue
 
-            # Create zip on remote server
-            if not create_remote_zip(ssh, remote_dir, sub):
-                print(f"Skipping download for '{sub}' due to zip error.")
-                continue
-
-            remote_zip_path = os.path.join(remote_dir, f"{sub}.zip").replace(
-                "\\", "/   "
-            )  # ensure posix path
+            # Check if remote zip file does not exists
+            if not remote_zip_file_exist(sftp, remote_zip_path):
+                # Create zip on remote server
+                if not create_remote_zip(ssh, remote_dir, sub):
+                    print(f"Skipping download for '{sub}' due to zip error.")
+                    continue
 
             # Download the zip file
             try:
