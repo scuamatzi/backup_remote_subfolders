@@ -1,69 +1,71 @@
 import getpass
-from modules.ssh_tools import is_directory, create_remote_zip, remote_zip_file_exist
+from modules.ssh_tools import (
+    is_directory,
+    create_remote_zip,
+    remote_zip_file_exist,
+    get_host,
+    get_port,
+    get_username,
+    get_remote_dir,
+)
 import os
 import paramiko
 import sys
 # import stat
 # from scp import SCPClient  # optional, but we'll use SFTP directly
 
+
 # ----------------------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------------------
-
 LOCAL_DIR = "backups"  # Local folder to store downloaded zips
 # KEY_DIR = os.path.expanduser("~/.ssh/keys")  # Directory containing SSH keys
 DEFAULT_PORT = 22
 
 
 # ----------------------------------------------------------------------
+# Helper Functions
+# ----------------------------------------------------------------------
+def confirm_keygen_usage():
+    print("\n")
+    print("*" * 60)
+    print("To work without password:")
+    print("- Remember to create ssh key with 'ssh-keygen' command.")
+    print("- Copy ssh key to remote server with 'ssh-copy-id' command.")
+    print("*" * 60)
+    nopass_answer = input("\nReady to continue without password? (y/n): ").strip()
+
+    if nopass_answer in ["no", "n"]:
+        print("\nExiting!")
+        sys.exit(0)
+
+    if nopass_answer not in ["y", "yes"]:
+        print("\nBad answer. Exiting...")
+        sys.exit(1)
+    return
+
+
+# ----------------------------------------------------------------------
 # Main script
 # ----------------------------------------------------------------------
-
-
 def main():
     print("=== Remote folder zipper and downloader ===\n")
 
     # Gather connection details
-    host = input("Server URL: ").strip()
-    if not host:
-        print("Host is required.")
-        sys.exit(1)
+    host = get_host()
 
-    port_input = input(f"Port (default {DEFAULT_PORT}): ").strip()
-    port = int(port_input) if port_input else DEFAULT_PORT
+    port = get_port(DEFAULT_PORT)
 
-    username = input("SSH Username: ").strip()
-    if not username:
-        print("Username is required.")
-        sys.exit(1)
+    username = get_username()
 
-    remote_dir = input(
-        "Remote directory to process (e.g., /home/server1/emails/): "
-    ).strip()
-    if not remote_dir:
-        print("Remote directory is required.")
-        sys.exit(1)
+    remote_dir = get_remote_dir()
 
     use_password = input("Need password for ssh connection? (y/n) :  ").strip()
 
     if use_password in ["y", "yes"]:
         passwd = getpass.getpass("Enter ssh password: ")
     else:
-        print("\n")
-        print("*" * 60)
-        print("To work without password:")
-        print("- Remember to create ssh key with 'ssh-keygen' command.")
-        print("- Copy ssh key to remote server with 'ssh-copy-id' command.")
-        print("*" * 60)
-        nopass_answer = input("\nReady to continue without password? (y/n): ").strip()
-
-        if nopass_answer in ["no", "n"]:
-            print("\nExiting!")
-            sys.exit(0)
-
-        if nopass_answer not in ["y", "yes"]:
-            print("\nBad answer. Exiting...")
-            sys.exit(1)
+        confirm_keygen_usage()
 
     # Find SSH private key
     # key_path = find_private_key(KEY_DIR)
@@ -75,14 +77,14 @@ def main():
     # Prepare local directory
     local_dir_full = os.path.join(os.getcwd(), LOCAL_DIR)
     os.makedirs(local_dir_full, exist_ok=True)
-    print(f"Local download folder: {local_dir_full}")
+    print(f"\nLocal download folder: {local_dir_full}")
 
     # Establish SSH connection
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     try:
-        print(f"Connecting to {host}:{port} as {username}...")
+        print(f"\nConnecting to {host}:{port} as {username}...")
         if use_password in ["y", "yes"]:
             ssh.connect(hostname=host, port=port, username=username, password=passwd)
         else:
@@ -127,7 +129,7 @@ def main():
 
             # Check if zip file exists, then skip
             if os.path.exists(local_zip_path):
-                print(f"\nFile '{sub}.zip' already downloaded. Skipping")
+                print(f"File '{sub}.zip' already downloaded. Skipping")
                 continue
 
             # Check if remote zip file does not exists

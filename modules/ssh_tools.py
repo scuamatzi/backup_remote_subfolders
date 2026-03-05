@@ -1,4 +1,5 @@
 import stat
+import sys
 # ----------------------------------------------------------------------
 # Helper functions
 # ----------------------------------------------------------------------
@@ -16,6 +17,39 @@ import stat
 #        if os.path.isfile(full_path) and not fname.endswith('.pub'):
 #            return full_path
 #    return None
+
+
+def get_host():
+    host = input("Server URL: ").strip()
+    if not host:
+        print("Host is required.")
+        sys.exit(1)
+
+    return host
+
+
+def get_port(default_port=22):
+    port_input = input(f"Port (default {default_port}): ").strip()
+    port = int(port_input) if port_input else default_port
+    return port
+
+
+def get_username():
+    username = input("SSH Username: ").strip()
+    if not username:
+        print("Username is required.")
+        sys.exit(1)
+    return username
+
+
+def get_remote_dir():
+    remote_dir = input(
+        "Remote directory to process (e.g., /home/server1/emails/): "
+    ).strip()
+    if not remote_dir:
+        print("Remote directory is required.")
+        sys.exit(1)
+    return remote_dir
 
 
 def is_directory(sftp, path):
