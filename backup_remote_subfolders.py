@@ -43,7 +43,8 @@ def confirm_keygen_usage():
             + "- Remember to create ssh key with 'ssh-keygen' command.\n"
             + "- Copy ssh key to remote server with 'ssh-copy-id' command.",
             title="Warning!!",
-        )
+        ),
+        style="dark_orange",
     )
     nopass_answer = input("\nReady to continue without password? (y/n): ").strip()
 
@@ -62,7 +63,7 @@ def confirm_keygen_usage():
 # ----------------------------------------------------------------------
 def main():
     # print("=== Remote folder zipper and downloader ===\n")
-    console.print(Panel("   Remote folder zipper and downloader"))
+    console.print(Panel("   Remote folder zipper and downloader"), style="dodger_blue2")
 
     # Gather connection details
     host = get_host()
@@ -133,7 +134,10 @@ def main():
             sys.exit(1)
 
         total_subfolders = len(subfolders)
-        print(f"Found {total_subfolders} subfolder(s): {', '.join(subfolders)}")
+        console.print(
+            f"Found {total_subfolders} subfolder(s): {', '.join(subfolders)}",
+            style="dodger_blue2",
+        )
 
         # Process each subfolder
         for idx, sub in enumerate(subfolders, 1):
@@ -163,7 +167,9 @@ def main():
                 with console.status(""):
                     print(f"Downloading {sub}.zip ...")
                     sftp.get(remote_zip_path, local_zip_path)
-                    print(f"Downloaded to {local_zip_path}")
+                    console.print(
+                        f"Downloaded to {local_zip_path}", style="dodger_blue2"
+                    )
             except Exception as e:
                 print(f"Download of '{sub}.zip' failed: {e}")
                 continue
@@ -173,7 +179,7 @@ def main():
             # sftp.remove(remote_zip_path)
             # print(f"Removed remote {sub}.zip")
 
-        print("\nAll done.")
+        console.print("\nAll done.", style="bold turquoise4")
     except Exception as e:
         print(f"An error ocurred processing subfolders on remote server:: {e}")
     finally:
