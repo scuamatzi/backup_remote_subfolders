@@ -1,3 +1,5 @@
+from rich.console import Console
+from rich.panel import Panel
 import getpass
 from modules.ssh_tools import (
     is_directory,
@@ -11,6 +13,8 @@ from modules.ssh_tools import (
 import os
 import paramiko
 import sys
+
+console = Console()
 # import stat
 # from scp import SCPClient  # optional, but we'll use SFTP directly
 
@@ -27,12 +31,19 @@ DEFAULT_PORT = 22
 # Helper Functions
 # ----------------------------------------------------------------------
 def confirm_keygen_usage():
-    print("\n")
-    print("*" * 60)
-    print("To work without password:")
-    print("- Remember to create ssh key with 'ssh-keygen' command.")
-    print("- Copy ssh key to remote server with 'ssh-copy-id' command.")
-    print("*" * 60)
+    # print("\n")
+    # print("*" * 60)
+    # print("To work without password:")
+    # print("- Remember to create ssh key with 'ssh-keygen' command.")
+    # print("- Copy ssh key to remote server with 'ssh-copy-id' command.")
+    # print("*" * 60)
+    console.print(
+        Panel(
+            "To work without password:\n"
+            + "- Remember to create ssh key with 'ssh-keygen' command.\n"
+            + "- Copy ssh key to remote server with 'ssh-copy-id' command."
+        )
+    )
     nopass_answer = input("\nReady to continue without password? (y/n): ").strip()
 
     if nopass_answer in ["no", "n"]:
@@ -49,7 +60,8 @@ def confirm_keygen_usage():
 # Main script
 # ----------------------------------------------------------------------
 def main():
-    print("=== Remote folder zipper and downloader ===\n")
+    # print("=== Remote folder zipper and downloader ===\n")
+    console.print(Panel("   Remote folder zipper and downloader"))
 
     # Gather connection details
     host = get_host()
