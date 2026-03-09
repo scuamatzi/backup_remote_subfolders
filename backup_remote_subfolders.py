@@ -41,7 +41,8 @@ def confirm_keygen_usage():
         Panel(
             "To work without password:\n"
             + "- Remember to create ssh key with 'ssh-keygen' command.\n"
-            + "- Copy ssh key to remote server with 'ssh-copy-id' command."
+            + "- Copy ssh key to remote server with 'ssh-copy-id' command.",
+            title="Warning!!",
         )
     )
     nopass_answer = input("\nReady to continue without password? (y/n): ").strip()
@@ -98,9 +99,13 @@ def main():
     try:
         print(f"\nConnecting to {host}:{port} as {username}...")
         if use_password in ["y", "yes"]:
-            ssh.connect(hostname=host, port=port, username=username, password=passwd)
+            with console.status(""):
+                ssh.connect(
+                    hostname=host, port=port, username=username, password=passwd
+                )
         else:
-            ssh.connect(hostname=host, port=port, username=username)
+            with console.status(""):
+                ssh.connect(hostname=host, port=port, username=username)
         print("Connected!")
     except Exception as e:
         print(f"Connection failed: {e}")
@@ -112,15 +117,16 @@ def main():
     try:
         #  List items in remote directory
         print(f"\nListing contents of {remote_dir}...")
-        items = sftp.listdir(remote_dir)
-        subfolders = []
+        with console.status(""):
+            items = sftp.listdir(remote_dir)
+            subfolders = []
 
-        for item in items:
-            full_path = os.path.join(remote_dir, item).replace(
-                "\\", "/"
-            )  # ensure posix path
-            if is_directory(sftp, full_path):
-                subfolders.append(item)
+            for item in items:
+                full_path = os.path.join(remote_dir, item).replace(
+                    "\\", "/"
+                )  # ensure posix path
+                if is_directory(sftp, full_path):
+                    subfolders.append(item)
 
         if not subfolders:
             print("No subfolders found. Exiting.")
@@ -131,31 +137,33 @@ def main():
 
         # Process each subfolder
         for idx, sub in enumerate(subfolders, 1):
-            print(f"\nProcessing '{sub}' ({idx}/{total_subfolders}) ...")
+            with console.status(""):
+                print(f"\nProcessing '{sub}' ({idx}/{total_subfolders}) ...")
 
-            local_zip_path = os.path.join(local_dir_full, f"{sub}.zip")
+                local_zip_path = os.path.join(local_dir_full, f"{sub}.zip")
 
-            remote_zip_path = os.path.join(remote_dir, f"{sub}.zip").replace(
-                "\\", "/   "
-            )  # ensure posix path
+                remote_zip_path = os.path.join(remote_dir, f"{sub}.zip").replace(
+                    "\\", "/   "
+                )  # ensure posix path
 
-            # Check if zip file exists, then skip
-            if os.path.exists(local_zip_path):
-                print(f"File '{sub}.zip' already downloaded. Skipping")
-                continue
-
-            # Check if remote zip file does not exists
-            if not remote_zip_file_exist(sftp, remote_zip_path):
-                # Create zip on remote server
-                if not create_remote_zip(ssh, remote_dir, sub):
-                    print(f"Skipping download for '{sub}' due to zip error.")
+                # Check if zip file exists, then skip
+                if os.path.exists(local_zip_path):
+                    print(f"File '{sub}.zip' already downloaded. Skipping")
                     continue
+
+                # Check if remote zip file does not exists
+                if not remote_zip_file_exist(sftp, remote_zip_path):
+                    # Create zip on remote server
+                    if not create_remote_zip(ssh, remote_dir, sub):
+                        print(f"Skipping download for '{sub}' due to zip error.")
+                        continue
 
             # Download the zip file
             try:
-                print(f"Downloading {sub}.zip ...")
-                sftp.get(remote_zip_path, local_zip_path)
-                print(f"Downloaded to {local_zip_path}")
+                with console.status(""):
+                    print(f"Downloading {sub}.zip ...")
+                    sftp.get(remote_zip_path, local_zip_path)
+                    print(f"Downloaded to {local_zip_path}")
             except Exception as e:
                 print(f"Download of '{sub}.zip' failed: {e}")
                 continue
